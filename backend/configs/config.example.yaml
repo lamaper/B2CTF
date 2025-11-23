@@ -1,0 +1,11 @@
+server:
+  addr: ":8080"
+
+database:
+  driver: "mysql"
+  dsn: "b2ctf_user:b2ctf_test@tcp(127.0.0.1:3306)/b2ctf?charset=utf8mb4&parseTime=True&loc=Local"
+
+jwt:
+  secret: "change-me-to-a-random-secret"
+  issuer: "ctf-platform"
+  expire_hours: 72
