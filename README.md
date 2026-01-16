@@ -1,71 +1,90 @@
 # B2CTF
 A CTF platform
 
-## Start
-Windows环境下下载[Go1.25.4windows-amd64.msi](https://go.dev/dl/go1.25.4.windows-amd64.msi)并安装
+## 快速开始
 
-克隆本项目到本地：
-```bash
-git clone https://github.com/golang/go.git
+### 环境要求
+- **Go**: 1.25+ （后端开发）
+- **Node.js**: 18+ （前端开发）
+
+### 安装步骤
+
+1. **克隆项目**
+   ```bash
+   git clone <项目仓库地址>
+   cd B2CTF
+   ```
+
+2. **安装后端依赖**
+   ```bash
+   cd backend
+   go env -w GOPROXY="https://goproxy.cn,direct"
+   go mod tidy
+   cd ..
+   ```
+
+3. **安装前端依赖**
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+### 启动方式
+
+#### 方式一：使用一键启动脚本（推荐）
+
+##### Windows平台
+```powershell
+# 使用PowerShell执行
+.\start_windows.ps1
 ```
 
-换源并安装依赖：
+##### Linux平台（Debian系列）
 ```bash
-cd ./backend
+# 赋予执行权限（首次使用）
+chmod +x start_linux.sh
 
-go env -w GOPROXY="https://goproxy.cn,direct"
-
-go mod tidy
+# 执行脚本
+./start_linux.sh
 ```
 
-启动测试环境：
-```bash
-go run ./cmd/server -config .\configs\config.example.yaml
-```
+#### 方式二：手动启动
 
-浏览器访问`http://localhost:8080/api/ping`，即可看到返回的json消息`{"msg": "pong"}`
+1. **启动后端服务**
+   ```bash
+   cd backend
+   go run ./cmd/server -config .\configs\config.example.yaml
+   ```
+
+2. **启动前端服务**（新终端）
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+### 访问地址
+- **前端界面**: http://localhost:5173
+- **后端API**: http://localhost:8080
+- **测试接口**: http://localhost:8080/api/ping
 
 ## 项目结构
 
-前端
+### 前端 (Vue 3 + Vite)
 ```
 frontend/
 ├── index.html
 ├── package.json
-├── tsconfig.json
-├── vite.config.ts
+├── vite.config.js
 └── src/
-    ├── main.ts
-    ├── App.vue
-    ├── router/
-    │   └── index.ts
-    ├── store/
-    │   └── user.ts          # Pinia 用户状态，存 token 等
-    ├── api/
-    │   ├── http.ts          # axios 封装
-    │   ├── auth.ts          # 登录注册相关请求
-    │   ├── challenge.ts     # 题目列表、详情、提交 flag
-    │   └── scoreboard.ts    # 排行榜
-    ├── views/
-    │   ├── LoginView.vue
-    │   ├── ChallengeListView.vue
-    │   ├── ChallengeDetailView.vue
-    │   ├── ScoreboardView.vue
-    │   └── Admin/
-    │       ├── AdminLayout.vue
-    │       └── ChallengeManageView.vue
-    ├── components/
-    │   ├── NavBar.vue
-    │   └── ChallengeCard.vue
-    ├── layouts/
-    │   └── DefaultLayout.vue
-    ├── styles/
-    │   └── global.css
-    └── utils/
-        └── auth.ts           # token 工具、角色判断等
+    ├── main.js
+    ├── App.vue                  # 主应用组件
+    └── api/
+        ├── http.js              # axios 封装
+        └── ping.js              # ping 接口调用
 ```
 
-后端
+### 后端 (Go + Gin)
 ```
 backend/
 ├── cmd/
@@ -73,45 +92,76 @@ backend/
 │       └── main.go              # 入口
 ├── internal/
 │   ├── config/                  # 配置加载
-│   │   └── config.go
-│   ├── router/                  # 路由注册
-│   │   └── router.go
-│   ├── middleware/              # 中间件（JWT、日志、恢复等）
-│   │   ├── auth.go
-│   │   └── logger.go
-│   ├── model/                   # 数据模型（GORM struct）
-│   │   ├── user.go
-│   │   ├── challenge.go
-│   │   └── solve.go
-│   ├── repository/              # 数据访问层（对 DB 操作）
-│   │   ├── user_repo.go
-│   │   ├── challenge_repo.go
-│   │   └── solve_repo.go
+│   ├── router/                  # 路由注册（包含CORS配置）
+│   ├── middleware/              # 中间件
+│   ├── model/                   # 数据模型
+│   ├── repository/              # 数据访问层
 │   ├── service/                 # 业务逻辑层
-│   │   ├── auth_service.go
-│   │   ├── challenge_service.go
-│   │   └── scoreboard_service.go
-│   ├── handler/                 # HTTP handler（Gin 的 handler）
-│   │   ├── auth_handler.go
-│   │   ├── challenge_handler.go
-│   │   ├── scoreboard_handler.go
-│   │   └── admin_handler.go
+│   ├── handler/                 # HTTP handler
 │   ├── db/                      # 数据库初始化
-│   │   └── db.go
-│   ├── pkg/                     # 通用小工具
-│   │   ├── jwt/                 # JWT 相关
-│   │   │   └── jwt.go
-│   │   ├── hash/                # 密码和 flag hash
-│   │   │   └── hash.go
-│   │   ├── logger/              # 日志封装
-│   │   │   └── logger.go
-│   │   └── response/            # 统一响应封装
-│   │       └── response.go
-│   └── bootstrap/               # 启动初始化逻辑组合
-│       └── app.go
+│   └── pkg/                     # 通用小工具
 ├── configs/
-│   └── config.example.yaml      # 配置示例（可以拷贝为 config.yaml）
-├── go.mod
-└── go.sum
-
+│   └── config.example.yaml      # 配置示例
+└── go.mod
 ```
+
+## 核心功能
+
+- ✅ 用户认证（注册、登录）
+- ✅ 题目管理
+- ✅ Flag提交
+- ✅ 排行榜
+- ✅ 管理后台
+- ✅ 跨域支持
+- ✅ 一键启动脚本
+
+## 配置说明
+
+### 后端配置
+配置文件路径：`backend/configs/config.example.yaml`
+
+```yaml
+server:
+  addr: ":8080"
+
+database:
+  driver: "mysql"
+  dsn: "b2ctf_user:b2ctf_test@tcp(127.0.0.1:3306)/b2ctf?charset=utf8mb4&parseTime=True&loc=Local"
+
+jwt:
+  secret: "change-me-to-a-random-secret"
+  issuer: "ctf-platform"
+  expire_hours: 72
+```
+
+### 跨域配置
+后端已配置CORS，允许所有来源的请求：
+- 允许的方法：GET、POST、PUT、DELETE、OPTIONS
+- 允许的请求头：Content-Type、Authorization
+
+## 开发说明
+
+### 前端开发
+```bash
+cd frontend
+npm run dev      # 开发模式
+npm run build    # 构建生产版本
+```
+
+### 后端开发
+```bash
+cd backend
+go run ./cmd/server -config ./configs/config.example.yaml    # 开发模式
+go build -o b2ctf-server ./cmd/server/                       # 构建生产版本
+```
+
+## 注意事项
+
+1. **首次使用**：请先安装Go和Node.js环境
+2. **数据库**：默认使用MySQL，需自行创建数据库
+3. **JWT密钥**：生产环境请修改JWT密钥
+4. **跨域配置**：生产环境建议限制允许的来源
+5. **一键脚本**：Windows需要PowerShell 5.1+，Linux需要bash环境
+
+## License
+MIT
