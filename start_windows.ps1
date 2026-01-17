@@ -9,7 +9,10 @@
 .tart_windows.ps1
 
 .NOTES
-Author: B2CTF Team
+Copyright (c) 2026 lamaper
+创建日期: 2026-01-17
+最后修改: 2026-01-17
+Author: lamaper
 #>
 
 # 配置颜色输出
