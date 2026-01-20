@@ -36,13 +36,7 @@ func SetupRouter() *gin.Engine {
 	{
 		api.POST("/register", handler.UserRegister)
 		api.POST("/login", handler.UserLogin)
-
-		// api.GET("/challenges", handler.ListChallenges)
-		// api.GET("/challenges/:id", handler.GetChallenge)
-		// api.POST("/challenges/:id/submit", middleware.AuthRequired(), handler.SubmitFlag)
-
-		// api.GET("/scoreboard", handler.GetScoreboard)
-		api.GET("/ping", handler.Ping) // just for test
+		
 	}
 
 	// 创建一个使用了 JWTAuth 中间件的路由组
@@ -51,11 +45,13 @@ func SetupRouter() *gin.Engine {
 	{
 		// 这里面的所有接口，都必须带 Token 才能访问
 		protected.GET("/user/profile", handler.GetUserProfile)
-		protected.GET("/challenge",handler.ListChallenges)
-		protected.POST("/challenge",handler.CreateChallenge)
-		
-		// 注意！仅供测试！后续添加管理员策略组后转移这个
+		protected.GET("/challenge", handler.ListChallenges)
+		protected.POST("/challenge", handler.CreateChallenge)
+
+		// 注意！仅供测试！后续添加管理员策略组后转移这个接口
 		protected.POST("/upload", handler.UploadFile)
+		protected.POST("/competitions", handler.CreateCompetition)
+		protected.GET("/competitions", handler.ListCompetitions)
 	}
 	return r
 }

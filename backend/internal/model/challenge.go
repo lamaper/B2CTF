@@ -1,23 +1,24 @@
 package model
 
-import (
-	"time"
-)
+import "gorm.io/gorm"
 
 type Challenge struct {
-	ID          uint   `gorm:"primaryKey"`
-	Title       string `gorm:"type:varchar(255);not null" json:"title"`
-	Category    string `gorm:"type:varchar(50);not null" json:"category"` // Web, Pwn, Crypto, Misc...
-	Description string `gorm:"type:text" json:"description"`
-	Score       int    `gorm:"default:1000" json:"score"`
-	Flag        string `gorm:"type:varchar(255);not null" json:"-"`
-	CreatedAt   time.Time
-    Tags      []string `gorm:"type:json;serializer:json" json:"tags"` 
-	Competition string `gorm:"type:varchar(255)" json:"competition"`
-    Type int `gorm:"default:0" json:"type"` // 1: 静态题, 2: 动态容器题
-    // 动态题配置 (静态题留空)
-    DockerImage  string `json:"docker_image"`  // 例如: "nginx:alpine"
-    InternalPort int    `json:"internal_port"` // 例如: 80
-    //附件
-    Attachment string `gorm:"type:varchar(255)" json:"attachment"`
+	gorm.Model
+	
+	// 关联字段：这道题属于哪个比赛
+	CompetitionID uint     `json:"competition_id"` 
+
+	Title         string   `gorm:"type:varchar(255);not null" json:"title"`
+	Category      string   `gorm:"type:varchar(50);not null" json:"category"`
+	Description   string   `gorm:"type:text" json:"description"`
+	Score         int      `gorm:"default:100" json:"score"`
+	
+	// Flag 绝对不能传给前端，所以 json:"-"
+	Flag          string   `gorm:"type:varchar(255);not null" json:"-"`
+	
+	// 附件下载链接
+	Attachment    string   `gorm:"type:varchar(255)" json:"attachment"`
+	
+	// 标签：自动将 Go 的 []string 转为数据库的 JSON 字符串存储
+	Tags          []string `gorm:"type:json;serializer:json" json:"tags"`
 }

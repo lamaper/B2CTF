@@ -3,31 +3,27 @@ package handler
 import (
 	"net/http"
 	"B2CTF/backend/internal/service"
-
 	"github.com/gin-gonic/gin"
 )
 
-// CreateChallengeRequest 创建题目的参数
+// CreateChallengeRequest 接收前端参数
 type CreateChallengeRequest struct {
-	Title       string `json:"title" binding:"required"`
-	Category    string `json:"category" binding:"required"`
-	Description string `json:"description" binding:"required"`
-	Flag        string `json:"flag" binding:"required"`
-	Score       int    `json:"score" binding:"required"`
-	Competition string `json:"competition" binding:"required"`
-	Tags        []string `json:"tags" binding:"required"`
-	Type        int `json:"type" binding:"required"`
-	DockerImage string `json:"docker_image"`
-	InternalPort int `json:"internal_port"`
-	Attachment string `json:"attachment"`
+	Title         string   `json:"title" binding:"required"`
+	Category      string   `json:"category" binding:"required"`
+	Description   string   `json:"description"`
+	Flag          string   `json:"flag" binding:"required"`
+	Score         int      `json:"score" binding:"required"`
+	CompetitionID uint     `json:"competition_id" binding:"required"` // 必填：关联比赛
+	Attachment    string   `json:"attachment"`                        // 选填：附件路径
+	Tags          []string `json:"tags"`                              // 选填：标签
 }
 
-// CreateChallenge 接口
+// CreateChallenge 创建题目接口
 func CreateChallenge(c *gin.Context) {
-	// TODO 1. 这里应该加一个权限检查：只有管理员才能创建
-	// role := c.GetString("role") // 从 Token 解析出来的角色
+	// 鉴权：只有 admin 能创建
+	// role := c.GetString("role")
 	// if role != "admin" {
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "只有管理员可以创建题目"})
+	// 	c.JSON(http.StatusForbidden, gin.H{"error": "权限不足"})
 	// 	return
 	// }
 
@@ -37,19 +33,26 @@ func CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := service.CreateChallenge(req.Title, req.Category, 
-		req.Description, req.Flag, req.Score, 
-		req.Competition, req.Tags, req.Type, 
-		req.DockerImage, 
-		req.InternalPort,req.Attachment); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建失败"})
+	err := service.CreateChallenge(
+		req.Title,
+		req.Category,
+		req.Description,
+		req.Flag,
+		req.Score,
+		req.CompetitionID, // 传入 ID
+		req.Attachment,
+		req.Tags,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建失败: " + err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"code": 200, "msg": "题目创建成功"})
 }
 
-// ListChallenges 接口
+// ListChallenges 获取列表接口
 func ListChallenges(c *gin.Context) {
 	challenges, err := service.GetAllChallenges()
 	if err != nil {
