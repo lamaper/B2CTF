@@ -50,3 +50,28 @@ func GenerateToken(userID uint, role string) (string, error) {
 	// 使用密钥签名令牌并获取完整的编码字符串
 	return token.SignedString(jwtSecret)
 }
+
+// ParseToken 解析 JWT Token
+// 输入：tokenString
+// 输出：Claims结构体, error
+func ParseToken(tokenString string) (jwt.MapClaims, error) {
+	// 1. 解析 token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// 验证签名算法是否是我们预期的 HMAC
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 验证 token 是否有效，并提取 claims
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, jwt.ErrSignatureInvalid
+}

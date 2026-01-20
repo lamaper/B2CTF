@@ -113,3 +113,27 @@ func UserLogin(c *gin.Context) {
 		},
 	})
 }
+
+// GetUserProfile 获取个人信息
+func GetUserProfile(c *gin.Context) {
+	// 1. 从上下文中取出中间件存进去的 userID
+	// 这里的 "userID" 必须和 middleware 里的 c.Set("userID", ...) 字符串一致
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取用户ID"})
+		return
+	}
+
+	// 2. 假装查数据库（这里直接返回ID演示）
+	// 实际开发中，你会用这个 ID 去 db.DB.First(&user, userID)
+	
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  "获取成功",
+		"data": gin.H{
+			"user_id": userID,
+			"role":    c.GetString("role"), // 也可以取 role
+			"info":    "这是一条只有登录用户才能看到的机密信息",
+		},
+	})
+}

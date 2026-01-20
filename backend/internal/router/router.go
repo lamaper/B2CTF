@@ -16,6 +16,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
+	r.Static("/upload", "./uploads")
 	// 添加CORS中间件
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
@@ -44,15 +45,17 @@ func SetupRouter() *gin.Engine {
 		api.GET("/ping", handler.Ping) // just for test
 	}
 
-	// 管理端
-	admin := r.Group("/api/admin")
-	admin.Use(middleware.AuthRequired(), middleware.AdminOnly())
+	// 创建一个使用了 JWTAuth 中间件的路由组
+	protected := r.Group("/")
+	protected.Use(middleware.JWTAuth())
 	{
-		admin.POST("/challenges", handler.AdminCreateChallenge)
-		admin.PUT("/challenges/:id", handler.AdminUpdateChallenge)
-		admin.DELETE("/challenges/:id", handler.AdminDeleteChallenge)
-		admin.GET("/challenges/:id/solves", handler.AdminListSolves)
+		// 这里面的所有接口，都必须带 Token 才能访问
+		protected.GET("/user/profile", handler.GetUserProfile)
+		protected.GET("/challenge",handler.ListChallenges)
+		protected.POST("/challenge",handler.CreateChallenge)
+		
+		// 注意！仅供测试！后续添加管理员策略组后转移这个
+		protected.POST("/upload", handler.UploadFile)
 	}
-
 	return r
 }
