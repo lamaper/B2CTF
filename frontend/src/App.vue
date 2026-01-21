@@ -1,60 +1,97 @@
 <script setup>
-import { ref } from 'vue';
-import { ping } from './api/ping';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import http from './api/http';
 
-const response = ref(null);
-const loading = ref(false);
-const error = ref(null);
+const route = useRoute();
+const router = useRouter();
+const isLoggedIn = ref(false);
 
-// 调用后端ping接口
-const testPing = async () => {
-  loading.value = true;
-  error.value = null;
-  
-  try {
-    const res = await ping();
-    response.value = res;
-  } catch (err) {
-    error.value = '与后端通信失败，请检查后端服务是否启动';
-    console.error(err);
-  } finally {
-    loading.value = false;
+const checkLoginStatus = () => {
+  const token = localStorage.getItem('token');
+  isLoggedIn.value = !!token;
+  if (token) {
+    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 };
+
+const logout = () => {
+  localStorage.removeItem('token');
+  delete http.defaults.headers.common['Authorization'];
+  isLoggedIn.value = false;
+  router.push('/login');
+};
+
+const navLinks = computed(() => {
+  if (isLoggedIn.value) {
+    return [
+      { name: '首页', path: '/' },
+      { name: '题目', path: '/challenges' },
+      { name: '比赛', path: '/competitions' },
+      { name: '个人中心', path: '/profile' }
+    ];
+  } else {
+    return [
+      { name: '首页', path: '/' },
+      { name: '注册', path: '/register' },
+      { name: '登录', path: '/login' }
+    ];
+  }
+});
+
+onMounted(() => {
+  checkLoginStatus();
+});
 </script>
 
 <template>
-  <div class="app-container">
-    <header class="app-header">
-      <h1>B2CTF 平台</h1>
-      <p>CTF 竞赛平台 - 简单起步</p>
-    </header>
-    
-    <main class="app-main">
-      <div class="test-section">
-        <h2>测试与后端通信</h2>
-        <button 
-          class="ping-button" 
-          @click="testPing"
-          :disabled="loading"
-        >
-          {{ loading ? '正在测试...' : '测试后端连接' }}
-        </button>
-        
-        <div v-if="response" class="response-success">
-          <h3>通信成功！</h3>
-          <p>后端返回：{{ JSON.stringify(response) }}</p>
+  <div class="app">
+    <!-- 导航栏 -->
+    <nav class="navbar">
+      <div class="navbar-container">
+        <div class="navbar-brand">
+          <router-link to="/" class="brand-link">
+            <h1>B2CTF</h1>
+          </router-link>
         </div>
         
-        <div v-if="error" class="response-error">
-          <h3>通信失败</h3>
-          <p>{{ error }}</p>
+        <div class="navbar-links">
+          <router-link 
+            v-for="link in navLinks" 
+            :key="link.path" 
+            :to="link.path"
+            class="nav-link"
+            :class="{ active: route.path === link.path }"
+          >
+            {{ link.name }}
+          </router-link>
+          
+          <button v-if="isLoggedIn" class="logout-button" @click="logout">
+            退出登录
+          </button>
         </div>
       </div>
+    </nav>
+    
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
     
-    <footer class="app-footer">
-      <p>© 2026 B2CTF Platform</p>
+    <!-- 页脚 -->
+    <footer class="footer">
+      <div class="footer-container">
+        <p>&copy; 2026 B2CTF Platform. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="#">关于我们</a>
+          <a href="#">使用帮助</a>
+          <a href="#">联系我们</a>
+        </div>
+      </div>
     </footer>
   </div>
 </template>
@@ -70,92 +107,153 @@ body {
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
   color: #333;
+  line-height: 1.6;
 }
 
-.app-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.app-header {
-  text-align: center;
-  padding: 40px 0;
+/* 导航栏样式 */
+.navbar {
   background-color: #2c3e50;
-  color: white;
-  border-radius: 8px;
-  margin-bottom: 30px;
-}
-
-.app-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-
-.app-header p {
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
-
-.app-main {
-  background-color: white;
-  padding: 30px;
-  border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.test-section h2 {
-  margin-bottom: 20px;
-  color: #2c3e50;
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 70px;
 }
 
-.ping-button {
-  background-color: #3498db;
+.navbar-brand .brand-link {
+  text-decoration: none;
+  color: white;
+}
+
+.navbar-brand h1 {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.nav-link:hover {
+  color: #3498db;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  color: #3498db;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.logout-button {
+  background-color: #e74c3c;
   color: white;
   border: none;
-  padding: 12px 24px;
-  font-size: 1rem;
+  padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.ping-button:hover:not(:disabled) {
-  background-color: #2980b9;
-}
-
-.ping-button:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.response-success, .response-error {
-  margin-top: 20px;
-  padding: 15px;
-  border-radius: 4px;
-}
-
-.response-success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.response-error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.response-success h3, .response-error h3 {
-  margin-bottom: 10px;
-}
-
-.app-footer {
-  text-align: center;
-  margin-top: 30px;
-  padding: 20px;
-  color: #7f8c8d;
   font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+/* 主内容区样式 */
+.main-content {
+  flex: 1;
+  width: 100%;
+}
+
+/* 页脚样式 */
+.footer {
+  background-color: #2c3e50;
+  color: white;
+  padding: 30px 0;
+  margin-top: auto;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: white;
+}
+
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    height: auto;
+    padding: 15px 20px;
+    gap: 10px;
+  }
+  
+  .navbar-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .footer-container {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
 }
 </style>
