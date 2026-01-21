@@ -1,3 +1,9 @@
+// ----------------------------------------------------------------------------
+// Copyright (c) 2026 lamaper
+// 创建日期: 2026-01-21
+// 最后修改: 2026-01-21
+// 描述: 题目相关的业务逻辑服务
+// ----------------------------------------------------------------------------
 package service
 
 import (
@@ -7,7 +13,9 @@ import (
 
 // CreateChallenge 创建题目
 // 参数列表较长，建议按顺序对应 handler 里的传参
-func CreateChallenge(title, category, desc, flag string, score int, compID uint, attachment string, tags []string) error {
+func CreateChallenge(title, category, desc, flag string, 
+	score int, compID uint, attachment string, 
+	tags []string) error {
 	challenge := model.Challenge{
 		Title:         title,
 		Category:      category,

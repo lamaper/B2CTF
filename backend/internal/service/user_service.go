@@ -46,7 +46,8 @@ func Register(username string, password string, email string) error {
 	}
 
 	// 密码加密 - 使用bcrypt算法生成哈希值
-	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), 
+	bcrypt.DefaultCost)
 	if err != nil {
 		return errors.New("密码加密失败")
 	}

@@ -1,3 +1,9 @@
+// ----------------------------------------------------------------------------
+// Copyright (c) 2026 lamaper
+// 创建日期: 2026-01-21
+// 最后修改: 2026-01-21
+// 描述: Flag提交相关的业务逻辑服务
+// ----------------------------------------------------------------------------
 package service
 
 import (
@@ -38,12 +44,15 @@ func SubmitFlag(userID uint, challengeID uint, submittedFlag string) (bool, erro
 
 	// 4. 查重：检查用户是否已经做过这道题
 	var count int64
-	db.DB.Model(&model.Solve{}).Where("user_id = ? AND challenge_id = ?", userID, challengeID).Count(&count)
+	db.DB.Model(&model.Solve{}).
+	Where("user_id = ? AND challenge_id = ?", userID, challengeID).
+	Count(&count)
 	if count > 0 {
 		return false, errors.New("你已经解出过这道题了")
 	}
 
-	// 5. 比对 Flag (去除首尾空格)
+	// 5. 比对 Flag 
+	// 特点是携带了去除首尾空格的功能
 	if strings.TrimSpace(submittedFlag) != chal.Flag {
 		return false, nil // Flag 错误，返回 false 但不是系统 error
 	}

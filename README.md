@@ -165,3 +165,40 @@ go build -o b2ctf-server ./cmd/server/                       # 构建生产版�
 
 ## License
 MIT
+
+## 开发规划
+*   架构: Go (Gin) + MySQL (GORM) + Clean Architecture (Service/Handler/Model)。
+*   用户: 注册、登录、JWT 鉴权、角色管理 (Admin/User)。
+*   赛事: 比赛 (Type=0) 与 常驻题库 (Type=1) 分离，支持赛期时间校验。
+*   题目: 基本 CRUD，支持 Tag 系统，支持静态附件上传与下载。
+*   解题: 静态 Flag 校验，防重复提交，事务级计分。
+
+### 阶段一：核心功能补全
+
+-  排行榜系统
+    -  实现 `RankService`：基于 Redis ZSet (高性能) 或 MySQL Group By (简单) 统计排名。
+    -  实现“比赛榜”与“总榜”分离。
+-  动态计分
+    -  难点：每当有人解出一题，需要重新计算该题所有解题者的分数并更新总榜。
+-  前端对接
+    -  完成登录、题目列表、提交 Flag、排行榜的 UI 开发。
+
+### 阶段二：Docker 容器化靶机
+
+-  Docker SDK 集成
+    -  后端调用 Docker API (Unix Socket/TCP) 控制容器生命周期。
+-  容器调度逻辑
+    -  用户点击“启动靶机” -> 后端分配独立容器 -> 映射随机端口 -> 返回 `IP:Port`。
+    -  自动销毁机制（TTL）：容器运行 1 小时后自动 kill，释放资源。
+-  动态 Flag 注入 (Web/Pwn)
+    -  在启动容器时，通过环境变量 (`ENV FLAG=flag{...}`) 把随机生成的 Flag 注入进去。
+
+### 阶段三：创新与进阶
+
+-  静态附件的动态 Flag
+    -  逆向题 (Reverse) 是一个下载到本地的 exe，如何让每个人的 Flag 不一样？
+-  反作弊系统
+    -  流量记录。
+    -  记录 User-Agent 和 IP 变动。
+-  流量转发与内网穿透
+    -  针对不暴露端口的题目，集成 frp 或 VPN 隧道。

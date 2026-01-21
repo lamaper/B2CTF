@@ -20,18 +20,22 @@ B2CTF/
 │   │   │   └── config.go   # 配置结构和加载逻辑
 │   │   ├── db/             # 数据库初始化
 │   │   │   └── db.go       # 数据库连接和迁移
-│   │   ├── handler/        # HTTP处理函数
+│   │   └── handler/        # HTTP处理函数
 │   │   │   ├── admin_handler.go  # 管理员接口
 │   │   │   ├── auth_handler.go   # 认证接口（部分实现）
-│   │   │   ├── challenge_handler.go # 题目接口（待实现）
+│   │   │   ├── challenge_handler.go # 题目接口
+│   │   │   ├── competition_handler.go # 比赛接口（已实现）
 │   │   │   ├── ping_handler.go   # 测试接口
 │   │   │   ├── scoreboard_handler.go # 排行榜接口（待实现）
+│   │   │   ├── submit_handler.go # Flag提交接口（已实现）
+│   │   │   ├── upload_handler.go # 文件上传接口（已实现）
 │   │   │   └── user_handler.go    # 用户接口（已实现）
 │   │   ├── middleware/     # 中间件
 │   │   │   ├── auth.go     # 认证中间件（待实现）
 │   │   │   └── logger.go   # 日志中间件
 │   │   ├── model/          # 数据模型
 │   │   │   ├── challenge.go # 题目模型
+│   │   │   ├── competition.go # 比赛模型（已实现）
 │   │   │   ├── solve.go    # 解题记录模型
 │   │   │   └── user.go     # 用户模型
 │   │   ├── pkg/            # 通用工具包
@@ -44,6 +48,9 @@ B2CTF/
 │   │   ├── router/         # 路由配置
 │   │   │   └── router.go   # 路由注册
 │   │   └── service/        # 业务逻辑层
+│   │       ├── challenge_service.go # 题目服务（已实现）
+│   │       ├── competition_service.go # 比赛服务（已实现）
+│   │       ├── submit_service.go # Flag提交服务（已实现）
 │   │       └── user_service.go # 用户服务（已实现）
 │   ├── go.mod              # Go模块文件
 │   └── go.sum              # Go依赖校验文件
@@ -83,7 +90,31 @@ B2CTF/
      - `Register(username, password, email) error` - 用户注册
      - `Login(username, password) (string, error)` - 用户登录
 
-2. **backend/internal/handler/user_handler.go**
+2. **backend/internal/service/challenge_service.go**
+   - 功能：题目管理的业务逻辑
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `CreateChallenge(title, category, desc, flag, score, compID, attachment, tags) error` - 创建题目
+
+3. **backend/internal/service/competition_service.go**
+   - 功能：比赛管理的业务逻辑
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `CreateCompetition(title, desc, cType, start, end) error` - 创建比赛
+
+4. **backend/internal/service/submit_service.go**
+   - 功能：Flag提交的业务逻辑
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `SubmitFlag(userID, challengeID, submittedFlag) (bool, error)` - 提交Flag
+
+5. **backend/internal/handler/user_handler.go**
    - 功能：处理用户相关的HTTP请求
    - 创建者：lamaper
    - 创建日期：2026-01-17
@@ -92,7 +123,31 @@ B2CTF/
      - `UserRegister(c *gin.Context)` - 处理注册请求
      - `UserLogin(c *gin.Context)` - 处理登录请求
 
-3. **backend/internal/pkg/utils/jwt.go**
+6. **backend/internal/handler/competition_handler.go**
+   - 功能：处理比赛相关的HTTP请求
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `CreateCompetition(c *gin.Context)` - 创建比赛
+
+7. **backend/internal/handler/submit_handler.go**
+   - 功能：处理Flag提交的HTTP请求
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `SubmitFlag(c *gin.Context)` - 提交Flag
+
+8. **backend/internal/handler/upload_handler.go**
+   - 功能：处理文件上传的HTTP请求
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `UploadFile(c *gin.Context)` - 上传文件
+
+9. **backend/internal/pkg/utils/jwt.go**
    - 功能：JWT令牌生成
    - 创建者：lamaper
    - 创建日期：2026-01-17
@@ -100,16 +155,26 @@ B2CTF/
    - 主要函数：
      - `GenerateToken(userID uint, role string) (string, error)` - 生成JWT令牌
 
-4. **backend/internal/model/user.go**
-   - 功能：用户数据模型
-   - 主要字段：ID、Username、PasswordHash、Email、Role、CreatedAt
+10. **backend/internal/model/user.go**
+    - 功能：用户数据模型
+    - 主要字段：ID、Username、PasswordHash、Email、Role、CreatedAt
 
-5. **backend/internal/router/router.go**
-   - 功能：路由配置
-   - 主要路由：
-     - POST /api/register - 用户注册
-     - POST /api/login - 用户登录
-     - GET /api/ping - 测试接口
+11. **backend/internal/model/competition.go**
+    - 功能：比赛数据模型
+    - 创建者：lamaper
+    - 创建日期：2026-01-21
+    - 最后修改：2026-01-21
+    - 主要字段：ID、Title、Description、Type、StartTime、EndTime
+
+12. **backend/internal/router/router.go**
+    - 功能：路由配置
+    - 主要路由：
+      - POST /api/register - 用户注册
+      - POST /api/login - 用户登录
+      - GET /api/ping - 测试接口
+      - POST /api/competitions - 创建比赛
+      - POST /api/submit - 提交Flag
+      - POST /api/upload - 上传文件
 
 #### 待实现的文件
 
