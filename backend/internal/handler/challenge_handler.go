@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"net/http"
 	"B2CTF/backend/internal/service"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +21,7 @@ type CreateChallengeRequest struct {
 
 // CreateChallenge 创建题目接口
 func CreateChallenge(c *gin.Context) {
-	鉴权：只有 admin 能创建
+	// 鉴权：只有 admin 能创建
 	role := c.GetString("role")
 	if role != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "权限不足"})

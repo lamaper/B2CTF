@@ -13,6 +13,7 @@ import (
 
 	"B2CTF/backend/internal/db"
 	"B2CTF/backend/internal/model"
+
 	"gorm.io/gorm"
 )
 
@@ -50,10 +51,10 @@ func SubmitFlag(userID uint, challengeID uint, submittedFlag string) (bool, erro
 	// =========================================================
 	// 5. 核心修改：查重逻辑 (区分个人赛/团队赛)
 	// =========================================================
-	
-	if comp.Mode == 1 { 
+
+	if comp.Mode == 1 {
 		// --- 团队赛模式 (Mode=1) ---
-		
+
 		// A. 必须先加入战队
 		if user.TeamID == 0 {
 			return false, errors.New("本场是团队赛，请先创建或加入一个战队")
@@ -62,26 +63,26 @@ func SubmitFlag(userID uint, challengeID uint, submittedFlag string) (bool, erro
 		// B. 检查“全队”是否做过
 		// 逻辑：在 solves 表里找，有没有任何一个记录，它的 user_id 对应的 team_id 是当前用户的 team_id
 		var count int64
-		// SQL: SELECT count(*) FROM solves JOIN users ON solves.user_id = users.id 
+		// SQL: SELECT count(*) FROM solves JOIN users ON solves.user_id = users.id
 		//      WHERE users.team_id = ? AND solves.challenge_id = ?
 		db.DB.Table("solves").
 			Joins("INNER JOIN users ON users.id = solves.user_id").
 			Where("users.team_id = ? AND solves.challenge_id = ?", user.TeamID, challengeID).
 			Count(&count)
-		
+
 		if count > 0 {
 			return false, errors.New("你的队友已经解出过这道题了")
 		}
 
 	} else {
 		// --- 个人赛/练习模式 (Mode=0) ---
-		
+
 		// 检查“自己”是否做过
 		var count int64
 		db.DB.Model(&model.Solve{}).
 			Where("user_id = ? AND challenge_id = ?", userID, challengeID).
 			Count(&count)
-		
+
 		if count > 0 {
 			return false, errors.New("你已经解出过这道题了")
 		}
@@ -92,7 +93,7 @@ func SubmitFlag(userID uint, challengeID uint, submittedFlag string) (bool, erro
 	// 6. 比对 Flag
 	if strings.TrimSpace(submittedFlag) != chal.Flag {
 		// 简单的防爆破可以在这里加，比如记录错误次数
-		return false, nil 
+		return false, nil
 	}
 
 	// 7. 开启事务：写入记录 + 加分
@@ -109,9 +110,15 @@ func SubmitFlag(userID uint, challengeID uint, submittedFlag string) (bool, erro
 		}
 
 		// B. 个人加分 (全局总分)
-		// 即使是团队赛，个人贡献分也应该涨，这不影响比赛排名(比赛排名是算sum)
 		if err := tx.Model(&model.User{}).Where("id = ?", userID).
 			UpdateColumn("score", gorm.Expr("score + ?", chal.Score)).Error; err != nil {
+			return err
+		}
+
+		// C. 【新增】题目解题数 +1
+		// 使用 gorm.Expr 原子操作，防止并发问题
+		if err := tx.Model(&model.Challenge{}).Where("id = ?", challengeID).
+			UpdateColumn("solved_count", gorm.Expr("solved_count + 1")).Error; err != nil {
 			return err
 		}
 

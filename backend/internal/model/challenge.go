@@ -21,4 +21,5 @@ type Challenge struct {
 	
 	// 标签：自动将 Go 的 []string 转为数据库的 JSON 字符串存储
 	Tags          []string `gorm:"type:json;serializer:json" json:"tags"`
+	SolvedCount int `gorm:"default:0" json:"solved_count"`
 }
