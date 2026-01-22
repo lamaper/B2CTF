@@ -13,8 +13,8 @@ import (
 
 // CreateChallenge 创建题目
 // 参数列表较长，建议按顺序对应 handler 里的传参
-func CreateChallenge(title, category, desc, flag string, 
-	score int, compID uint, attachment string, 
+func CreateChallenge(title, category, desc, flag string,
+	score int, compID uint, attachment string,
 	tags []string) error {
 	challenge := model.Challenge{
 		Title:         title,
@@ -37,4 +37,37 @@ func GetAllChallenges() ([]model.Challenge, error) {
 	// 按照 ID 倒序排列
 	result := db.DB.Order("id desc").Find(&challenges)
 	return challenges, result.Error
+}
+
+func GetChallengeByID(chalID uint) (*model.Challenge, error) {
+	var chal model.Challenge
+	err := db.DB.First(&chal, chalID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &chal, nil
+}
+
+func DeleteChallenge(chalID uint) error {
+	return db.DB.Delete(&model.Challenge{}, chalID).Error
+}
+
+func SetChallengeInfo(chalID uint, title, category, desc, flag string,
+	score int, compID uint, attachment string,
+	tags []string) error {
+	var chal model.Challenge
+	if err := db.DB.First(&chal, chalID).Error; err != nil {
+		return err
+	}
+
+	chal.Title = title
+	chal.Category = category
+	chal.Description = desc
+	chal.Flag = flag
+	chal.Score = score
+	chal.CompetitionID = compID
+	chal.Attachment = attachment
+	chal.Tags = tags
+
+	return db.DB.Save(&chal).Error
 }

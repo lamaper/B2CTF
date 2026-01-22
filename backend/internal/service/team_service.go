@@ -2,11 +2,13 @@ package service
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"strings"
+
+	"github.com/google/uuid"
 
 	"B2CTF/backend/internal/db"
 	"B2CTF/backend/internal/model"
+
 	"gorm.io/gorm"
 )
 
@@ -71,7 +73,7 @@ func JoinTeam(userID uint, token string) error {
 func LeaveTeam(userID uint) error {
 	var user model.User
 	db.DB.First(&user, userID)
-	
+
 	if user.TeamID == 0 {
 		return errors.New("你当前没有队伍")
 	}
@@ -101,4 +103,30 @@ func GetMyTeamInfo(userID uint) (*model.Team, error) {
 	}
 
 	return &team, nil
+}
+
+func GetTeamByID(teamID uint) (*model.Team, error) {
+	var team model.Team
+	if err := db.DB.First(&team, teamID).Error; err != nil {
+		return nil, err
+	}
+	return &team, nil
+}
+
+// TODO: GetTeamRank 获取团队赛排行榜
+
+func DeleteTeam(teamID uint) error {
+	return db.DB.Delete(&model.Team{}, teamID).Error
+}
+
+func SetTeamInfo(teamID uint, name, desc string) error {
+	var team model.Team
+	if err := db.DB.First(&team, teamID).Error; err != nil {
+		return err
+	}
+
+	team.Name = name
+	team.Description = desc
+
+	return db.DB.Save(&team).Error
 }
