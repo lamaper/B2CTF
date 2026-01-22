@@ -10,9 +10,12 @@ import "time"
 
 type User struct {
 	ID           uint      `gorm:"primaryKey"`
-	Username     string    `gorm:"uniqueIndex;size:32;not null"`
-	PasswordHash string    `gorm:"size:255;not null"`
-	Role         string    `gorm:"size:16;default:user;not null"` // user/admin
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
-	Email        string    `gorm:"uniqueIndex;size:32;not null"`
+	Username     string    `gorm:"uniqueIndex;size:32;not null" json:"username"`
+	PasswordHash string    `gorm:"size:255;not null" json:"-"`
+	Role         string    `gorm:"size:16;default:user;not null" json:"role"` // user/admin
+	CreatedAt    time.Time `gorm:"autoCreateTime" `
+	Email        string    `gorm:"uniqueIndex;size:32;not null" json:"email"`
+	Score        int       `gorm:"default:0" json:"score"`
+	Avatar       string    `gorm:"size:255" json:"avatar"` 
+	TeamID 		 uint      `json:"team_id"`
 }

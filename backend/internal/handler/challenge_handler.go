@@ -20,12 +20,12 @@ type CreateChallengeRequest struct {
 
 // CreateChallenge 创建题目接口
 func CreateChallenge(c *gin.Context) {
-	// 鉴权：只有 admin 能创建
-	// role := c.GetString("role")
-	// if role != "admin" {
-	// 	c.JSON(http.StatusForbidden, gin.H{"error": "权限不足"})
-	// 	return
-	// }
+	鉴权：只有 admin 能创建
+	role := c.GetString("role")
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "权限不足"})
+		return
+	}
 
 	var req CreateChallengeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

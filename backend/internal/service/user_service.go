@@ -89,7 +89,7 @@ func Login(username string, password string) (string, error) {
 	// 根据用户名查询用户信息
 	result := db.DB.Where("username = ?", username).First(&user)
 	if result.Error != nil {
-		return "", errors.New("用户名或密码错误") // 不暴露具体错误信息，提高安全性
+		return "", errors.New("用户名或密码错误") 
 	}
 
 	// 比对密码哈希值 - 使用bcrypt算法验证密码
@@ -105,4 +105,29 @@ func Login(username string, password string) (string, error) {
 	}
 
 	return token, nil
+}
+
+// UpdateAvatar 更新用户头像
+// userID: 用户ID
+// newAvatarPath: 新头像的存储路径
+func UpdateAvatar(userID uint, newAvatarPath string) error {
+	var user model.User
+	// 1. 先查出用户当前的信息
+	if err := db.DB.First(&user, userID).Error; err != nil {
+		return err
+	}
+
+	// 2. [优化] 清理旧头像
+	// 如果用户原来有头像，且不是默认头像，且文件存在，就删掉它
+	if user.Avatar != "" && !strings.Contains(user.Avatar, "default") {
+		// user.Avatar 存的是 "/uploads/...", 实际路径是 "./uploads/..."
+		// 这里的路径拼接需要根据你实际的存储策略微调
+		// 简单的做法是去掉开头的 "/" 然后拼接 "."
+		oldPath := "." + user.Avatar
+		_ = os.Remove(oldPath) // 忽略错误，删不掉也不影响主流程
+	}
+
+	// 3. 更新数据库字段
+	// UpdateColumn 仅更新指定字段，效率高且安全
+	return db.DB.Model(&user).UpdateColumn("avatar", newAvatarPath).Error
 }

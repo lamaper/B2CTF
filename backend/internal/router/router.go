@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------
 // Copyright (c) 2026 lamaper
 // 创建日期: 2026-01-17
-// 最后修改: 2026-01-17
+// 最后修改: 2026-01-22
 // 描述: 路由配置文件
 // ----------------------------------------------------------------------------
 package router
@@ -52,6 +52,16 @@ func SetupRouter() *gin.Engine {
 		protected.POST("/upload", handler.UploadFile)
 		protected.POST("/competitions", handler.CreateCompetition)
 		protected.GET("/competitions", handler.ListCompetitions)
+
+		
 	}
+
+	teamGroup := protected.Group("/team")
+	{
+    	teamGroup.POST("/create", handler.CreateTeam)
+    	teamGroup.POST("/join", handler.JoinTeam)
+    	teamGroup.GET("/my", handler.GetMyTeam) // 前端一进“我的战队”页面就调这个
+	}
+
 	return r
 }

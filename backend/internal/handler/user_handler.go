@@ -137,3 +137,71 @@ func GetUserProfile(c *gin.Context) {
 		},
 	})
 }
+
+// UploadAvatar 修改头像接口
+func UploadAvatar(c *gin.Context) {
+	// 1. 获取当前登录用户的 ID
+	userIDFloat, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未登录"})
+		return
+	}
+	userID := uint(userIDFloat.(float64))
+
+	// 2. 获取上传的文件
+	file, err := c.FormFile("file") // 前端 FormData 的 key 必须是 "file"
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请上传图片文件"})
+		return
+	}
+
+	// 3. 校验文件类型 (简单的后缀名校验)
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	allowExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true}
+	if !allowExts[ext] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "只支持 jpg/png/gif 格式的图片"})
+		return
+	}
+
+	// 4. 校验文件大小 (例如限制 2MB)
+	if file.Size > 2*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "图片大小不能超过 2MB"})
+		return
+	}
+
+	// 5. 准备存储路径
+	// 目录: ./uploads/avatars
+	saveDir := "./uploads/avatars"
+	if _, err := os.Stat(saveDir); os.IsNotExist(err) {
+		os.MkdirAll(saveDir, os.ModePerm)
+	}
+
+	// 生成随机文件名: uuid.png
+	newFileName := uuid.New().String() + ext
+	dst := filepath.Join(saveDir, newFileName)
+
+	// 6. 保存文件到磁盘
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存图片失败"})
+		return
+	}
+
+	// 7. 生成对外访问的 URL
+	avatarURL := "/uploads/avatars/" + newFileName
+
+	// 8. 调用 Service 更新数据库
+	if err := service.UpdateAvatar(userID, avatarURL); err != nil {
+		// 如果数据库更新失败，最好把刚才上传的文件删掉，避免垃圾文件堆积
+		os.Remove(dst)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新头像数据失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"msg":  "头像修改成功",
+		"data": gin.H{
+			"avatar": avatarURL, // 返回新头像给前端立即回显
+		},
+	})
+}
