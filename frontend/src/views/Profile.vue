@@ -11,23 +11,11 @@ const error = ref('');
 
 const fetchProfile = async () => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     const response = await http.get('/user/profile');
-    userProfile.value = response;
+    userProfile.value = response.data;
   } catch (err) {
     error.value = '获取个人资料失败';
     console.error(err);
-    // 如果token无效，跳转到登录页
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      router.push('/login');
-    }
   } finally {
     loading.value = false;
   }

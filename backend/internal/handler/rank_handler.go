@@ -4,32 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"B2CTF/backend/internal/db"
+	"B2CTF/backend/internal/model"
 	"B2CTF/backend/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
-
-// GetCompRank 比赛榜单接口
-func GetCompRank(c *gin.Context) {
-	// 从 URL 参数获取比赛 ID (例如 /api/rank/competition/1)
-	compIDStr := c.Param("id")
-	compID, err := strconv.Atoi(compIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的比赛ID"})
-		return
-	}
-
-	rankList, err := service.GetCompetitionRank(uint(compID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取排名失败"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"data": rankList,
-	})
-}
 
 // GetGlobalRank 全局榜单接口
 func GetGlobalRank(c *gin.Context) {
@@ -48,7 +28,11 @@ func GetGlobalRank(c *gin.Context) {
 // GetCompRank 获取比赛排行榜 (智能切换)
 func GetCompRank(c *gin.Context) {
 	compIDStr := c.Param("id")
-	compID, _ := strconv.Atoi(compIDStr)
+	compID, err := strconv.Atoi(compIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的比赛ID"})
+		return
+	}
 	uid := uint(compID)
 
 	// 1. 先查比赛信息，看它是个人赛还是团队赛
@@ -74,7 +58,7 @@ func GetCompRank(c *gin.Context) {
 
 	} else {
 		// --- 分支 B：个人赛 (默认) ---
-		rankList, err := service.GetCompetitionRank(uid) // 这是你之前写好的那个函数
+		rankList, err := service.GetCompetitionRank(uid)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取个人排名失败"})
 			return

@@ -11,26 +11,18 @@ const error = ref('');
 
 const fetchChallenges = async () => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     const response = await http.get('/challenge');
-    challenges.value = response || [];
+    challenges.value = response.data || [];
   } catch (err) {
     error.value = '获取题目列表失败';
     console.error(err);
-    // 如果token无效，跳转到登录页
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      router.push('/login');
-    }
   } finally {
     loading.value = false;
   }
+};
+
+const viewChallenge = (challengeId) => {
+  router.push(`/challenge/${challengeId}`);
 };
 
 onMounted(() => {
@@ -75,8 +67,8 @@ onMounted(() => {
           </div>
           
           <div class="challenge-footer">
-            <button class="view-button">查看详情</button>
-            <button class="submit-button">提交Flag</button>
+            <button class="view-button" @click="viewChallenge(challenge.id)">查看详情</button>
+            <button class="submit-button" @click="viewChallenge(challenge.id)">提交Flag</button>
           </div>
         </div>
       </div>

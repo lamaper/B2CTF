@@ -23,17 +23,29 @@ const handleLogin = async () => {
   error.value = '';
 
   try {
-    const response = await http.post('/login', form.value);
+    console.log('发送登录请求:', form.value);
+    const response = await http.post('/api/login', form.value);
+    console.log('登录响应:', response);
     if (response.code === 200) {
       // 存储token
       localStorage.setItem('token', response.data.token);
+      // 存储用户角色
+      localStorage.setItem('userRole', response.data.role || 'user');
       // 跳转到首页
       router.push('/');
     } else {
       error.value = response.msg || '登录失败';
     }
   } catch (err) {
-    error.value = err.response?.data?.error || '登录失败，请稍后重试';
+    // 处理后端返回的错误格式
+    console.log('登录错误:', err);
+    if (err.response?.data?.error) {
+      error.value = err.response.data.error;
+    } else if (err.response?.data?.msg) {
+      error.value = err.response.data.msg;
+    } else {
+      error.value = '登录失败，请稍后重试';
+    }
     console.error(err);
   } finally {
     loading.value = false;

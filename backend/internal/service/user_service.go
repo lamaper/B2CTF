@@ -11,6 +11,8 @@ import (
 	"B2CTF/backend/internal/model"
 	"B2CTF/backend/internal/pkg/utils"
 	"errors"
+	"strings"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -78,33 +80,34 @@ func Register(username string, password string, email string) error {
 // 返回值:
 //
 //	string: 登录成功返回JWT令牌
+//	string: 登录成功返回用户角色
 //	error: 登录失败返回具体错误信息
 //
 // 错误类型:
 //
 //	"用户名或密码错误": 用户名不存在或密码错误
 //	其他: JWT生成失败或数据库操作等系统错误
-func Login(username string, password string) (string, error) {
+func Login(username string, password string) (string, string, error) {
 	var user model.User
 	// 根据用户名查询用户信息
 	result := db.DB.Where("username = ?", username).First(&user)
 	if result.Error != nil {
-		return "", errors.New("用户名或密码错误") 
+		return "", "", errors.New("用户名或密码错误") 
 	}
 
 	// 比对密码哈希值 - 使用bcrypt算法验证密码
 	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return "", errors.New("用户名或密码错误")
+		return "", "", errors.New("用户名或密码错误")
 	}
 
 	// 生成JWT令牌 - 包含用户ID和角色信息
 	token, err := utils.GenerateToken(user.ID, user.Role)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return token, nil
+	return token, user.Role, nil
 }
 
 // UpdateAvatar 更新用户头像

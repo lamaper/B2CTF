@@ -11,23 +11,11 @@ const error = ref('');
 
 const fetchCompetitions = async () => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     const response = await http.get('/competitions');
-    competitions.value = response || [];
+    competitions.value = response.data || [];
   } catch (err) {
     error.value = '获取比赛列表失败';
     console.error(err);
-    // 如果token无效，跳转到登录页
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      router.push('/login');
-    }
   } finally {
     loading.value = false;
   }

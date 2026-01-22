@@ -5,8 +5,8 @@
 
 ## 基本信息
 
-- **基础URL**：`http://localhost:8080/api`
-- **Content-Type**：`application/json`
+- **基础URL**：`http://localhost:8080`
+- **Content-Type**：`application/json`（除文件上传接口外）
 - **认证方式**：JWT Token（通过Authorization头传递）
 
 ## 错误响应格式
@@ -24,7 +24,7 @@
 
 **请求**
 - **方法**：`POST`
-- **URL**：`/register`
+- **URL**：`/api/register`
 - **请求体**：
   ```json
   {
@@ -35,11 +35,11 @@
   ```
 
 **响应**
-- **成功**（201 Created）：
+- **成功**（200 OK）：
   ```json
   {
-    "code": 201,
-    "msg": "用户注册成功"
+    "code": 200,
+    "msg": "注册成功"
   }
   ```
 - **失败**：
@@ -52,8 +52,8 @@
   或
   ```json
   {
-    "code": 500,
-    "msg": "用户注册失败"
+    "code": 400,
+    "msg": "邮箱已存在"
   }
   ```
 
@@ -61,7 +61,7 @@
 
 **请求**
 - **方法**：`POST`
-- **URL**：`/login`
+- **URL**：`/api/login`
 - **请求体**：
   ```json
   {
@@ -77,36 +77,44 @@
     "code": 200,
     "msg": "登录成功",
     "data": {
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "role": "user"
     }
   }
   ```
 - **失败**：
   ```json
   {
-    "code": 401,
-    "msg": "用户名或密码错误"
-  }
-  ```
-  或
-  ```json
-  {
-    "code": 500,
-    "msg": "登录失败"
+    "error": "用户名或密码错误"
   }
   ```
 
-### 3. 测试接口
+### 3. 获取用户信息接口
 
 **请求**
 - **方法**：`GET`
-- **URL**：`/ping`
+- **URL**：`/user/profile`
+- **认证**：需要JWT Token
 
 **响应**
 - **成功**（200 OK）：
   ```json
   {
-    "msg": "pong"
+    "code": 200,
+    "msg": "获取成功",
+    "data": {
+      "user_id": 1,
+      "username": "testuser",
+      "email": "test@example.com",
+      "role": "user",
+      "created_at": "2026-01-17T12:00:00Z"
+    }
+  }
+  ```
+- **失败**：
+  ```json
+  {
+    "error": "无法获取用户信息"
   }
   ```
 
@@ -115,6 +123,7 @@
 **请求**
 - **方法**：`POST`
 - **URL**：`/competitions`
+- **认证**：需要JWT Token（管理员权限）
 - **请求体**：
   ```json
   {
@@ -127,31 +136,76 @@
   ```
 
 **响应**
-- **成功**（201 Created）：
+- **成功**（200 OK）：
   ```json
   {
-    "code": 201,
+    "code": 200,
     "msg": "比赛创建成功"
   }
   ```
 - **失败**：
   ```json
   {
-    "code": 400,
-    "msg": "比赛标题不能为空"
+    "error": "只有管理员可以创建比赛"
+  }
+  ```
+  或
+  ```json
+  {
+    "error": "参数错误: invalid character '}' looking for beginning of object key string"
   }
   ```
 
-### 5. 提交Flag接口
+### 5. 获取比赛列表接口
+
+**请求**
+- **方法**：`GET`
+- **URL**：`/competitions`
+- **认证**：需要JWT Token
+
+**响应**
+- **成功**（200 OK）：
+  ```json
+  {
+    "code": 200,
+    "msg": "获取成功",
+    "data": [
+      {
+        "id": 1,
+        "title": "CTF比赛2026",
+        "description": "新年第一场CTF比赛",
+        "type": 0,
+        "start_time": "2026-01-20T15:04:05Z",
+        "end_time": "2026-01-21T15:04:05Z",
+        "mode": 0
+      }
+    ]
+  }
+  ```
+- **失败**：
+  ```json
+  {
+    "error": "获取列表失败"
+  }
+  ```
+
+### 6. 创建题目接口
 
 **请求**
 - **方法**：`POST`
-- **URL**：`/submit`
+- **URL**：`/challenge`
+- **认证**：需要JWT Token（管理员权限）
 - **请求体**：
   ```json
   {
-    "challenge_id": 1,
-    "flag": "flag{test123}"
+    "title": "测试题目",
+    "category": "Web",
+    "description": "这是一个测试题目",
+    "flag": "flag{test123}",
+    "score": 100,
+    "competition_id": 1,
+    "attachment": "/uploads/test.zip",
+    "tags": ["Web", "Easy"]
   }
   ```
 
@@ -160,30 +214,64 @@
   ```json
   {
     "code": 200,
-    "msg": "Flag正确"
+    "msg": "题目创建成功"
   }
   ```
 - **失败**：
   ```json
   {
-    "code": 400,
-    "msg": "Flag错误"
+    "error": "权限不足"
   }
   ```
   或
   ```json
   {
-    "code": 404,
-    "msg": "题目不存在"
+    "error": "创建失败: 错误信息"
   }
   ```
 
-### 6. 文件上传接口
+### 7. 获取题目列表接口
+
+**请求**
+- **方法**：`GET`
+- **URL**：`/challenge`
+- **认证**：需要JWT Token
+
+**响应**
+- **成功**（200 OK）：
+  ```json
+  {
+    "code": 200,
+    "msg": "获取成功",
+    "data": [
+      {
+        "id": 1,
+        "title": "测试题目",
+        "category": "Web",
+        "description": "这是一个测试题目",
+        "score": 100,
+        "competition_id": 1,
+        "attachment": "/uploads/test.zip",
+        "tags": ["Web", "Easy"],
+        "solved_count": 0
+      }
+    ]
+  }
+  ```
+- **失败**：
+  ```json
+  {
+    "error": "获取列表失败"
+  }
+  ```
+
+### 8. 文件上传接口
 
 **请求**
 - **方法**：`POST`
 - **URL**：`/upload`
 - **Content-Type**：`multipart/form-data`
+- **认证**：需要JWT Token
 - **表单数据**：
   - `file`：文件（必填）
 
@@ -201,44 +289,130 @@
 - **失败**：
   ```json
   {
-    "code": 400,
-    "msg": "请上传文件"
+    "error": "请上传文件"
   }
   ```
   或
   ```json
   {
-    "code": 500,
-    "msg": "上传失败"
+    "error": "上传失败"
+  }
+  ```
+
+### 9. 创建团队接口
+
+**请求**
+- **方法**：`POST`
+- **URL**：`/team/create`
+- **认证**：需要JWT Token
+- **请求体**：
+  ```json
+  {
+    "name": "测试团队",
+    "description": "这是一个测试团队"
+  }
+  ```
+
+**响应**
+- **成功**（200 OK）：
+  ```json
+  {
+    "code": 200,
+    "msg": "团队创建成功",
+    "data": {
+      "team_id": 1,
+      "token": "team_token_123"
+    }
+  }
+  ```
+- **失败**：
+  ```json
+  {
+    "error": "创建团队失败"
+  }
+  ```
+
+### 10. 加入团队接口
+
+**请求**
+- **方法**：`POST`
+- **URL**：`/team/join`
+- **认证**：需要JWT Token
+- **请求体**：
+  ```json
+  {
+    "token": "team_token_123"
+  }
+  ```
+
+**响应**
+- **成功**（200 OK）：
+  ```json
+  {
+    "code": 200,
+    "msg": "加入团队成功"
+  }
+  ```
+- **失败**：
+  ```json
+  {
+    "error": "加入团队失败"
+  }
+  ```
+
+### 11. 获取我的团队接口
+
+**请求**
+- **方法**：`GET`
+- **URL**：`/team/my`
+- **认证**：需要JWT Token
+
+**响应**
+- **成功**（200 OK）：
+  ```json
+  {
+    "code": 200,
+    "msg": "获取成功",
+    "data": {
+      "id": 1,
+      "name": "测试团队",
+      "description": "这是一个测试团队",
+      "token": "team_token_123",
+      "captain_id": 1,
+      "members": [
+        {
+          "id": 1,
+          "username": "testuser",
+          "email": "test@example.com",
+          "role": "user",
+          "score": 0,
+          "avatar": "",
+          "team_id": 1
+        }
+      ]
+    }
+  }
+  ```
+- **失败**：
+  ```json
+  {
+    "error": "获取团队失败"
   }
   ```
 
 ## 待实现的API
 
-### 1. 题目相关API
+### 1. 排行榜API
 
-- **获取所有题目**：`GET /challenges`
-- **获取单个题目**：`GET /challenges/:id`
-- **提交Flag**：`POST /challenges/:id/submit`
-- **获取题目分类**：`GET /challenges/categories`
+- **获取排行榜**：`GET /rank`
 
-### 2. 排行榜API
+### 2. Flag提交接口
 
-- **获取排行榜**：`GET /scoreboard`
+- **提交Flag**：`POST /submit`
 
 ### 3. 用户相关API
 
-- **获取当前用户信息**：`GET /user/me`
-- **更新用户信息**：`PUT /user/me`
-- **获取用户提交记录**：`GET /user/submissions`
-
-### 4. 管理员API
-
-- **添加题目**：`POST /admin/challenges`
-- **更新题目**：`PUT /admin/challenges/:id`
-- **删除题目**：`DELETE /admin/challenges/:id`
-- **获取所有用户**：`GET /admin/users`
-- **管理用户权限**：`PUT /admin/users/:id/role`
+- **更新用户头像**：`POST /user/avatar`
 
 ## API认证
 
@@ -256,3 +430,4 @@ Authorization: Bearer <token>
 2. 敏感操作需要JWT认证
 3. 密码在传输和存储时都会进行加密处理
 4. 输入数据会进行严格的验证
+5. 管理员接口需要管理员权限才能访问

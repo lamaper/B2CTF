@@ -26,13 +26,24 @@ const handleRegister = async () => {
   success.value = '';
 
   try {
-    const response = await http.post('/register', form.value);
-    success.value = response.msg || '注册成功';
-    setTimeout(() => {
-      router.push('/login');
-    }, 1500);
+    const response = await http.post('/api/register', form.value);
+    if (response.code === 200) {
+      success.value = response.msg || '注册成功';
+      setTimeout(() => {
+        router.push('/login');
+      }, 1500);
+    } else {
+      error.value = response.msg || '注册失败';
+    }
   } catch (err) {
-    error.value = err.response?.data?.error || '注册失败，请稍后重试';
+    // 处理后端返回的错误格式
+    if (err.response?.data?.error) {
+      error.value = err.response.data.error;
+    } else if (err.response?.data?.msg) {
+      error.value = err.response.data.msg;
+    } else {
+      error.value = '注册失败，请稍后重试';
+    }
     console.error(err);
   } finally {
     loading.value = false;

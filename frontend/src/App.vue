@@ -1,35 +1,50 @@
+<!-- ---------------------------------------------------------------------------- -->
+<!-- Copyright (c) 2026 lamaper                                                      -->
+<!-- 创建日期: 2026-01-17                                                          -->
+<!-- 最后修改: 2026-01-22                                                          -->
+<!-- 描述: 前端应用主组件，包含导航栏和全局状态管理                                   -->
+<!-- ---------------------------------------------------------------------------- -->
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import http from './api/http';
 
 const route = useRoute();
 const router = useRouter();
 const isLoggedIn = ref(false);
+const isAdmin = ref(false);
 
 const checkLoginStatus = () => {
   const token = localStorage.getItem('token');
   isLoggedIn.value = !!token;
-  if (token) {
-    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  }
+  const userRole = localStorage.getItem('userRole');
+  isAdmin.value = userRole === 'admin';
 };
 
 const logout = () => {
   localStorage.removeItem('token');
-  delete http.defaults.headers.common['Authorization'];
+  localStorage.removeItem('userRole');
   isLoggedIn.value = false;
+  isAdmin.value = false;
   router.push('/login');
 };
 
 const navLinks = computed(() => {
   if (isLoggedIn.value) {
-    return [
+    const links = [
       { name: '首页', path: '/' },
       { name: '题目', path: '/challenges' },
       { name: '比赛', path: '/competitions' },
-      { name: '个人中心', path: '/profile' }
+      { name: '用户信息', path: '/profile' }
     ];
+    
+    // 管理员链接
+    if (isAdmin.value) {
+      links.push({ name: '创建比赛', path: '/create-competition' });
+      links.push({ name: '创建题目', path: '/create-challenge' });
+    }
+    
+    return links;
   } else {
     return [
       { name: '首页', path: '/' },
@@ -40,6 +55,11 @@ const navLinks = computed(() => {
 });
 
 onMounted(() => {
+  checkLoginStatus();
+});
+
+// 监听路由变化，每次路由变化时都检查登录状态
+watch(() => route.path, () => {
   checkLoginStatus();
 });
 </script>

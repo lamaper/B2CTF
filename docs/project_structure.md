@@ -20,48 +20,61 @@ B2CTF/
 │   │   │   └── config.go   # 配置结构和加载逻辑
 │   │   ├── db/             # 数据库初始化
 │   │   │   └── db.go       # 数据库连接和迁移
-│   │   └── handler/        # HTTP处理函数
-│   │   │   ├── admin_handler.go  # 管理员接口
-│   │   │   ├── auth_handler.go   # 认证接口（部分实现）
+│   │   ├── handler/        # HTTP处理函数
 │   │   │   ├── challenge_handler.go # 题目接口
-│   │   │   ├── competition_handler.go # 比赛接口（已实现）
-│   │   │   ├── ping_handler.go   # 测试接口
-│   │   │   ├── scoreboard_handler.go # 排行榜接口（待实现）
-│   │   │   ├── submit_handler.go # Flag提交接口（已实现）
-│   │   │   ├── upload_handler.go # 文件上传接口（已实现）
-│   │   │   └── user_handler.go    # 用户接口（已实现）
+│   │   │   ├── competition_handler.go # 比赛接口
+│   │   │   ├── rank_handler.go # 排行榜接口
+│   │   │   ├── submit_handler.go # Flag提交接口
+│   │   │   ├── team_handler.go # 团队接口
+│   │   │   ├── upload_handler.go # 文件上传接口
+│   │   │   └── user_handler.go # 用户接口
 │   │   ├── middleware/     # 中间件
-│   │   │   ├── auth.go     # 认证中间件（待实现）
+│   │   │   ├── auth.go     # JWT认证中间件
 │   │   │   └── logger.go   # 日志中间件
 │   │   ├── model/          # 数据模型
 │   │   │   ├── challenge.go # 题目模型
-│   │   │   ├── competition.go # 比赛模型（已实现）
+│   │   │   ├── competition.go # 比赛模型
+│   │   │   ├── rank.go     # 排行榜模型
 │   │   │   ├── solve.go    # 解题记录模型
+│   │   │   ├── team.go     # 团队模型
 │   │   │   └── user.go     # 用户模型
 │   │   ├── pkg/            # 通用工具包
 │   │   │   └── utils/      # 工具函数
-│   │   │       └── jwt.go  # JWT工具（已实现）
-│   │   ├── repository/     # 数据访问层（待实现）
-│   │   │   ├── challenge_repo.go
-│   │   │   ├── solve_repo.go
-│   │   │   └── user_repo.go
+│   │   │       └── jwt.go  # JWT工具
 │   │   ├── router/         # 路由配置
 │   │   │   └── router.go   # 路由注册
 │   │   └── service/        # 业务逻辑层
-│   │       ├── challenge_service.go # 题目服务（已实现）
-│   │       ├── competition_service.go # 比赛服务（已实现）
-│   │       ├── submit_service.go # Flag提交服务（已实现）
-│   │       └── user_service.go # 用户服务（已实现）
+│   │       ├── challenge_service.go # 题目服务
+│   │       ├── competition_service.go # 比赛服务
+│   │       ├── rank_service.go # 排行榜服务
+│   │       ├── submit_service.go # Flag提交服务
+│   │       ├── team_service.go # 团队服务
+│   │       └── user_service.go # 用户服务
 │   ├── go.mod              # Go模块文件
 │   └── go.sum              # Go依赖校验文件
 ├── frontend/               # 前端代码目录
 │   ├── public/             # 静态资源
 │   ├── src/                # 源代码
+│   │   ├── api/            # API调用
+│   │   │   ├── http.js     # Axios封装
+│   │   │   └── ping.js     # Ping接口调用
 │   │   ├── assets/         # 资源文件
 │   │   ├── components/     # 组件
-│   │   ├── api/            # API调用
+│   │   ├── router/         # 路由配置
+│   │   │   └── index.js    # 路由定义
+│   │   ├── views/          # 页面组件
+│   │   │   ├── ChallengeDetail.vue # 题目详情页
+│   │   │   ├── Challenges.vue # 题目列表页
+│   │   │   ├── Competitions.vue # 比赛列表页
+│   │   │   ├── CreateChallenge.vue # 创建题目页
+│   │   │   ├── CreateCompetition.vue # 创建比赛页
+│   │   │   ├── Home.vue    # 首页
+│   │   │   ├── Login.vue   # 登录页
+│   │   │   ├── Profile.vue # 用户信息页
+│   │   │   └── Register.vue # 注册页
 │   │   ├── App.vue         # 根组件
-│   │   └── main.js         # 入口文件
+│   │   ├── main.js         # 入口文件
+│   │   └── style.css       # 全局样式
 │   ├── index.html          # HTML模板
 │   ├── package.json        # npm配置
 │   └── vite.config.js      # Vite配置
@@ -70,6 +83,7 @@ B2CTF/
 │   └── project_structure.md # 项目结构文档
 ├── deploy/                 # 部署相关
 ├── .gitignore              # Git忽略文件
+├── LICENSE                 # 许可证文件
 ├── README.md               # 项目说明
 ├── start_linux.sh          # Linux启动脚本
 └── start_windows.ps1       # Windows启动脚本
@@ -81,47 +95,46 @@ B2CTF/
 
 #### 已实现的文件
 
-1. **backend/internal/service/user_service.go**
-   - 功能：用户注册和登录的业务逻辑
+1. **backend/cmd/server/main.go**
+   - 功能：服务器主入口文件
    - 创建者：lamaper
    - 创建日期：2026-01-17
    - 最后修改：2026-01-17
    - 主要函数：
-     - `Register(username, password, email) error` - 用户注册
-     - `Login(username, password) (string, error)` - 用户登录
+     - `main()` - 程序入口，加载配置并启动服务
 
-2. **backend/internal/service/challenge_service.go**
-   - 功能：题目管理的业务逻辑
-   - 创建者：lamaper
-   - 创建日期：2026-01-21
-   - 最后修改：2026-01-21
-   - 主要函数：
-     - `CreateChallenge(title, category, desc, flag, score, compID, attachment, tags) error` - 创建题目
-
-3. **backend/internal/service/competition_service.go**
-   - 功能：比赛管理的业务逻辑
-   - 创建者：lamaper
-   - 创建日期：2026-01-21
-   - 最后修改：2026-01-21
-   - 主要函数：
-     - `CreateCompetition(title, desc, cType, start, end) error` - 创建比赛
-
-4. **backend/internal/service/submit_service.go**
-   - 功能：Flag提交的业务逻辑
-   - 创建者：lamaper
-   - 创建日期：2026-01-21
-   - 最后修改：2026-01-21
-   - 主要函数：
-     - `SubmitFlag(userID, challengeID, submittedFlag) (bool, error)` - 提交Flag
-
-5. **backend/internal/handler/user_handler.go**
-   - 功能：处理用户相关的HTTP请求
+2. **backend/internal/bootstrap/app.go**
+   - 功能：应用启动逻辑
    - 创建者：lamaper
    - 创建日期：2026-01-17
    - 最后修改：2026-01-17
    - 主要函数：
-     - `UserRegister(c *gin.Context)` - 处理注册请求
-     - `UserLogin(c *gin.Context)` - 处理登录请求
+     - `Run(configPath string) error` - 启动应用服务
+
+3. **backend/internal/config/config.go**
+   - 功能：配置加载和管理
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `Init(configPath string)` - 初始化配置
+
+4. **backend/internal/db/db.go**
+   - 功能：数据库初始化和连接管理
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `Init()` - 初始化数据库连接
+
+5. **backend/internal/handler/challenge_handler.go**
+   - 功能：处理题目相关的HTTP请求
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要函数：
+     - `CreateChallenge(c *gin.Context)` - 创建题目
+     - `ListChallenges(c *gin.Context)` - 获取题目列表
 
 6. **backend/internal/handler/competition_handler.go**
    - 功能：处理比赛相关的HTTP请求
@@ -130,69 +143,140 @@ B2CTF/
    - 最后修改：2026-01-21
    - 主要函数：
      - `CreateCompetition(c *gin.Context)` - 创建比赛
+     - `ListCompetitions(c *gin.Context)` - 获取比赛列表
 
-7. **backend/internal/handler/submit_handler.go**
-   - 功能：处理Flag提交的HTTP请求
-   - 创建者：lamaper
-   - 创建日期：2026-01-21
-   - 最后修改：2026-01-21
-   - 主要函数：
-     - `SubmitFlag(c *gin.Context)` - 提交Flag
-
-8. **backend/internal/handler/upload_handler.go**
-   - 功能：处理文件上传的HTTP请求
-   - 创建者：lamaper
-   - 创建日期：2026-01-21
-   - 最后修改：2026-01-21
-   - 主要函数：
-     - `UploadFile(c *gin.Context)` - 上传文件
-
-9. **backend/internal/pkg/utils/jwt.go**
-   - 功能：JWT令牌生成
+7. **backend/internal/handler/user_handler.go**
+   - 功能：处理用户相关的HTTP请求
    - 创建者：lamaper
    - 创建日期：2026-01-17
    - 最后修改：2026-01-17
    - 主要函数：
-     - `GenerateToken(userID uint, role string) (string, error)` - 生成JWT令牌
+     - `UserRegister(c *gin.Context)` - 处理注册请求
+     - `UserLogin(c *gin.Context)` - 处理登录请求
+     - `GetUserProfile(c *gin.Context)` - 获取用户信息
+     - `UploadAvatar(c *gin.Context)` - 修改头像
 
-10. **backend/internal/model/user.go**
-    - 功能：用户数据模型
-    - 主要字段：ID、Username、PasswordHash、Email、Role、CreatedAt
+8. **backend/internal/model/challenge.go**
+   - 功能：题目数据模型
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要字段：ID、Title、Category、Description、Score、Flag、Attachment、Tags、SolvedCount
 
-11. **backend/internal/model/competition.go**
-    - 功能：比赛数据模型
+9. **backend/internal/model/competition.go**
+   - 功能：比赛数据模型
+   - 创建者：lamaper
+   - 创建日期：2026-01-21
+   - 最后修改：2026-01-21
+   - 主要字段：ID、Title、Description、Type、StartTime、EndTime、Mode
+
+10. **backend/internal/model/solve.go**
+    - 功能：解题记录数据模型
     - 创建者：lamaper
     - 创建日期：2026-01-21
     - 最后修改：2026-01-21
-    - 主要字段：ID、Title、Description、Type、StartTime、EndTime
+    - 主要字段：ID、UserID、ChallengeID、CompetitionID、Score
 
-12. **backend/internal/router/router.go**
+11. **backend/internal/model/team.go**
+    - 功能：团队数据模型
+    - 创建者：lamaper
+    - 创建日期：2026-01-21
+    - 最后修改：2026-01-21
+    - 主要字段：ID、Name、Description、Token、CaptainID、Members
+
+12. **backend/internal/model/user.go**
+    - 功能：用户数据模型
+    - 创建者：lamaper
+    - 创建日期：2026-01-17
+    - 最后修改：2026-01-17
+    - 主要字段：ID、Username、PasswordHash、Email、Role、CreatedAt、Score、Avatar、TeamID
+
+13. **backend/internal/router/router.go**
     - 功能：路由配置
+    - 创建者：lamaper
+    - 创建日期：2026-01-17
+    - 最后修改：2026-01-22
     - 主要路由：
       - POST /api/register - 用户注册
       - POST /api/login - 用户登录
-      - GET /api/ping - 测试接口
-      - POST /api/competitions - 创建比赛
-      - POST /api/submit - 提交Flag
-      - POST /api/upload - 上传文件
+      - GET /user/profile - 获取用户信息
+      - GET /challenge - 获取题目列表
+      - POST /challenge - 创建题目
+      - POST /upload - 上传文件
+      - POST /competitions - 创建比赛
+      - GET /competitions - 获取比赛列表
+      - POST /team/create - 创建团队
+      - POST /team/join - 加入团队
+      - GET /team/my - 获取我的团队
 
-#### 待实现的文件
+14. **backend/internal/service/user_service.go**
+    - 功能：用户注册和登录的业务逻辑
+    - 创建者：lamaper
+    - 创建日期：2026-01-17
+    - 最后修改：2026-01-17
+    - 主要函数：
+      - `Register(username, password, email) error` - 用户注册
+      - `Login(username, password) (string, string, error)` - 用户登录
 
-- **challenge相关文件**：题目管理功能
-- **scoreboard相关文件**：排行榜功能
-- **repository层**：数据访问层
-- **auth中间件**：JWT认证中间件
+15. **backend/internal/service/challenge_service.go**
+    - 功能：题目管理的业务逻辑
+    - 创建者：lamaper
+    - 创建日期：2026-01-21
+    - 最后修改：2026-01-21
+    - 主要函数：
+      - `CreateChallenge(title, category, desc, flag, score, compID, attachment, tags) error` - 创建题目
+      - `GetAllChallenges() ([]model.Challenge, error)` - 获取所有题目
+
+16. **backend/internal/service/competition_service.go**
+    - 功能：比赛管理的业务逻辑
+    - 创建者：lamaper
+    - 创建日期：2026-01-21
+    - 最后修改：2026-01-21
+    - 主要函数：
+      - `CreateCompetition(title, desc, cType, start, end) error` - 创建比赛
+      - `GetCompetitions() ([]model.Competition, error)` - 获取比赛列表
+
+17. **backend/internal/pkg/utils/jwt.go**
+    - 功能：JWT令牌生成
+    - 创建者：lamaper
+    - 创建日期：2026-01-17
+    - 最后修改：2026-01-17
+    - 主要函数：
+      - `GenerateToken(userID uint, role string) (string, error)` - 生成JWT令牌
 
 ### 前端核心文件
 
-- **App.vue**：主应用组件
-- **main.js**：应用入口
-- **api/http.js**：axios封装
-- **router/index.js**：路由配置
+1. **frontend/src/main.js**
+   - 功能：前端应用入口文件
+   - 创建者：lamaper
+   - 创建日期：2026-01-17
+   - 最后修改：2026-01-17
+   - 主要功能：初始化Vue应用并挂载
+
+2. **frontend/src/App.vue**
+   - 功能：前端应用主组件，包含导航栏和全局状态管理
+   - 创建者：lamaper
+   - 创建日期：2026-01-17
+   - 最后修改：2026-01-22
+   - 主要功能：管理登录状态、显示导航栏、处理路由变化
+
+3. **frontend/src/router/index.js**
+   - 功能：前端路由配置文件
+   - 创建者：lamaper
+   - 创建日期：2026-01-17
+   - 最后修改：2026-01-17
+   - 主要功能：定义路由规则和导航守卫
+
+4. **frontend/src/api/http.js**
+   - 功能：Axios HTTP客户端配置
+   - 创建者：lamaper
+   - 创建日期：2026-01-17
+   - 最后修改：2026-01-17
+   - 主要功能：配置Axios实例、添加请求/响应拦截器
 
 ## 技术栈
 
-- **后端**：Go 1.24+, Gin, GORM, MySQL, JWT
+- **后端**：Go 1.25+, Gin, GORM, MySQL, JWT
 - **前端**：Vue 3, Vite, Axios
 - **工具**：Git, Docker
 

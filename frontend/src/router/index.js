@@ -1,3 +1,9 @@
+// ----------------------------------------------------------------------------
+// Copyright (c) 2026 lamaper
+// 创建日期: 2026-01-17
+// 最后修改: 2026-01-17
+// 描述: 前端路由配置文件
+// ----------------------------------------------------------------------------
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 
@@ -33,6 +39,24 @@ const routes = [
     path: '/competitions',
     name: 'Competitions',
     component: () => import('../views/Competitions.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/create-competition',
+    name: 'CreateCompetition',
+    component: () => import('../views/CreateCompetition.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/create-challenge',
+    name: 'CreateChallenge',
+    component: () => import('../views/CreateChallenge.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/challenge/:id',
+    name: 'ChallengeDetail',
+    component: () => import('../views/ChallengeDetail.vue'),
     meta: { requiresAuth: true }
   }
 ];

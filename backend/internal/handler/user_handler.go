@@ -7,10 +7,16 @@
 package handler
 
 import (
+	"B2CTF/backend/internal/db"
+	"B2CTF/backend/internal/model"
 	"B2CTF/backend/internal/service"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // UserRegisterRequest 用户注册请求结构体
@@ -86,7 +92,7 @@ func UserRegister(c *gin.Context) {
 //
 // 响应:
 //
-//	成功: {"code": 200, "msg": "登录成功", "data": {"token": "jwt_token"}}
+//	成功: {"code": 200, "msg": "登录成功", "data": {"token": "jwt_token", "role": "admin"}}
 //	失败: {"error": "错误信息"} (401 状态码)
 func UserLogin(c *gin.Context) {
 	var req UserLoginRequest
@@ -98,7 +104,7 @@ func UserLogin(c *gin.Context) {
 	}
 
 	// 调用Service层的登录逻辑
-	token, err := service.Login(req.Username, req.Password)
+	token, role, err := service.Login(req.Username, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()}) // 401 未授权
 		return
@@ -110,6 +116,7 @@ func UserLogin(c *gin.Context) {
 		"msg":  "登录成功",
 		"data": gin.H{
 			"token": token,
+			"role":  role,
 		},
 	})
 }
@@ -124,16 +131,23 @@ func GetUserProfile(c *gin.Context) {
 		return
 	}
 
-	// 2. 假装查数据库（这里直接返回ID演示）
-	// 实际开发中，你会用这个 ID 去 db.DB.First(&user, userID)
-	
+	// 2. 查询数据库获取用户信息
+	var user model.User
+	result := db.DB.First(&user, userID)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取用户信息"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"msg":  "获取成功",
 		"data": gin.H{
-			"user_id": userID,
-			"role":    c.GetString("role"), // 也可以取 role
-			"info":    "这是一条只有登录用户才能看到的机密信息",
+			"user_id":    user.ID,
+			"username":   user.Username,
+			"email":      user.Email,
+			"role":       user.Role,
+			"created_at": user.CreatedAt,
 		},
 	})
 }
