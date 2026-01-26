@@ -28,4 +28,19 @@ type Challenge struct {
 	// 标签：自动将 Go 的 []string 转为数据库的 JSON 字符串存储
 	Tags          []string `gorm:"type:json;serializer:json" json:"tags"`
 	SolvedCount int `gorm:"default:0" json:"solved_count"`
+
+	// --- 动态靶机配置 ---
+	// 是否是动态题 (0:静态, 1:动态)
+	IsDynamic    bool   `gorm:"default:false" json:"is_dynamic"`
+	
+	// Docker 镜像名
+	ImageName    string `gorm:"size:128" json:"image_name"`
+	
+	// 容器内部端口
+	ContainerPort int   `json:"container_port"`
+	
+	// 资源限制
+	MemoryLimit  string `gorm:"default:'128m'" json:"memory_limit"`
+	CPULimit     string `gorm:"default:'0.5'" json:"cpu_limit"`
+	
 }

@@ -52,8 +52,8 @@ func SetupRouter() *gin.Engine {
 		protected.POST("/upload", handler.UploadFile)
 		protected.POST("/competitions", handler.CreateCompetition)
 		protected.GET("/competitions", handler.ListCompetitions)
-
-		
+		protected.POST("/container/launch", handler.LaunchContainer)
+		protected.POST("/container/terminate", handler.TerminateContainer)
 	}
 
 	teamGroup := protected.Group("/team")
@@ -61,6 +61,7 @@ func SetupRouter() *gin.Engine {
     	teamGroup.POST("/create", handler.CreateTeam)
     	teamGroup.POST("/join", handler.JoinTeam)
     	teamGroup.GET("/my", handler.GetMyTeam) // 前端一进“我的战队”页面就调这个
+		
 	}
 
 	return r

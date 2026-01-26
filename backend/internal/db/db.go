@@ -35,8 +35,18 @@ func Init() {
 		log.Fatalf("open db failed: %v", err)
 	}
 
-	// 自动迁移：先迁移基础表，再迁移有外键依赖的表
-    if err := DB.AutoMigrate(&model.Team{}, &model.Competition{}, &model.User{}, &model.Challenge{}, &model.Solve{}); err != nil {
-        log.Fatalf("auto migrate failed: %v", err)
-    }
+	// 自动迁移
+	// ⚠️ 加上 &model.Container{}
+	err = DB.AutoMigrate(
+		&model.Team{},
+		&model.Competition{},
+		&model.User{},
+		&model.Challenge{},
+		&model.Solve{},
+		&model.Container{}, // <--- 新增这一行
+	)
+
+	if err != nil {
+		log.Fatalf("auto migrate failed: %v", err)
+	}
 }
