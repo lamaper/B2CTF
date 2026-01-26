@@ -28,4 +28,9 @@ type Competition struct {
 	// 0: 个人赛 (Individual) - 排行榜显示 User
 	// 1: 团队赛 (Team) - 排行榜显示 Team
 	Mode        int       `gorm:"default:0" json:"mode"` 
+
+	// 靶机数量限制
+	// 允许该比赛/练习场的用户同时开启几个靶机
+	// 默认值为 1
+	ContainerLimit int    `gorm:"default:1" json:"container_limit"` 
 }

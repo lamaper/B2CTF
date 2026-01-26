@@ -12,6 +12,7 @@ import (
 
 	"B2CTF/backend/internal/config"
 	"B2CTF/backend/internal/db"
+	"B2CTF/backend/internal/pkg/docker"
 	"B2CTF/backend/internal/router"
 )
 
@@ -21,9 +22,10 @@ func Run(configPath string) error {
 
 	// 2. 初始化 DB
 	db.Init()
-
+	docker.Init()
 	// 3. 初始化路由
 	r := router.SetupRouter()
+
 
 	// 4. 启动服务
 	addr := config.C.Server.Addr
