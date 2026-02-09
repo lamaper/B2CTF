@@ -62,6 +62,9 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/rank", handler.GetGlobalRank)
 		protected.GET("/rank/:id", handler.GetCompRank)
 
+		// --- 文件上传 ---
+		protected.POST("/upload", handler.UploadFile)
+
 		// --- 团队相关 ---
 		teamGroup := protected.Group("/team")
 		{
@@ -85,9 +88,6 @@ func SetupRouter() *gin.Engine {
 		admin.POST("/competition", handler.CreateCompetition)
 		admin.PUT("/competition/:id", handler.UpdateCompetition)
 		admin.DELETE("/competition/:id", handler.DeleteCompetition)
-
-		// --- 文件上传 ---
-		admin.POST("/upload", handler.UploadFile)
 
 		// --- 用户管理 ---
 		admin.GET("/users", handler.ListUsers)

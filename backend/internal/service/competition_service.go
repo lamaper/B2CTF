@@ -1,14 +1,13 @@
 // ----------------------------------------------------------------------------
 // Copyright (c) 2026 lamaper
 // 创建日期: 2026-01-21
-// 最后修改: 2026-01-21
+// 最后修改: 2026-02-07
 // 描述: 比赛相关的业务逻辑服务
 // ----------------------------------------------------------------------------
 package service
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"B2CTF/backend/internal/db"
@@ -25,11 +24,7 @@ func CreateCompetition(title, desc string, cType, mode int, start, end time.Time
 		EndTime:     end,
 		Mode:        mode,
 	}
-	err := db.DB.Create(&comp).Error
-	if err == nil {
-		log.Printf("[审计] 管理员 %d 创建了比赛: %s (ID: %d)", adminID, title, comp.ID)
-	}
-	return err
+	return db.DB.Create(&comp).Error
 }
 
 // GetCompetitions 获取所有比赛列表
@@ -57,11 +52,7 @@ func UpdateCompetition(compID uint, title, desc string, cType, mode int,
 		"end_time":    end,
 	}
 
-	err := db.DB.Model(&comp).Updates(updates).Error
-	if err == nil {
-		log.Printf("[审计] 管理员 %d 更新了比赛: %s (ID: %d)", adminID, title, compID)
-	}
-	return err
+	return db.DB.Model(&comp).Updates(updates).Error
 }
 
 // DeleteCompetition 删除比赛
@@ -78,9 +69,5 @@ func DeleteCompetition(compID uint, adminID uint) error {
 		return errors.New("比赛已有题目，无法删除")
 	}
 
-	err := db.DB.Delete(&comp).Error
-	if err == nil {
-		log.Printf("[审计] 管理员 %d 删除了比赛: %s (ID: %d)", adminID, comp.Title, compID)
-	}
-	return err
+	return db.DB.Delete(&comp).Error
 }

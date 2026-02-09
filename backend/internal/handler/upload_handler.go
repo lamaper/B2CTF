@@ -11,24 +11,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"B2CTF/backend/internal/middleware"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-// UploadFile 处理文件上传（仅限管理员）
+// UploadFile 处理文件上传（允许所有认证用户）
 func UploadFile(c *gin.Context) {
-	// 1. 权限检查：只有管理员能上传文件
-	if !middleware.IsAdmin(c) {
-		c.JSON(http.StatusForbidden, gin.H{
-			"code": 403,
-			"msg":  "没有权限，仅管理员可以上传文件",
-		})
-		return
-	}
-
-	// 2. 获取上传的文件
+	// 1. 获取上传的文件
 	// "file" 是前端表单里的字段名 (formData.append('file', ...))
 	file, err := c.FormFile("file")
 	if err != nil {
