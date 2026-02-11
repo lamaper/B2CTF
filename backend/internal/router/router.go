@@ -16,7 +16,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.Static("/upload", "./uploads")
+	r.Static("/uploads", "./uploads")
 	// 添加CORS中间件
 	r.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
@@ -36,32 +36,66 @@ func SetupRouter() *gin.Engine {
 	{
 		api.POST("/register", handler.UserRegister)
 		api.POST("/login", handler.UserLogin)
-		
 	}
 
 	// 创建一个使用了 JWTAuth 中间件的路由组
 	protected := r.Group("/")
 	protected.Use(middleware.JWTAuth())
 	{
-		// 这里面的所有接口，都必须带 Token 才能访问
+		// --- 用户相关 ---
 		protected.GET("/user/profile", handler.GetUserProfile)
-		protected.GET("/challenge", handler.ListChallenges)
-		protected.POST("/challenge", handler.CreateChallenge)
 
-		// 注意！仅供测试！后续添加管理员策略组后转移这个接口
-		protected.POST("/upload", handler.UploadFile)
-		protected.POST("/competitions", handler.CreateCompetition)
+		// --- 题目相关（查看不需权限，但创建需要管理员）---
+		protected.GET("/challenge", handler.ListChallenges)
+
+		// --- 比赛相关（查看不需权限，但创建需要管理员）---
 		protected.GET("/competitions", handler.ListCompetitions)
+
+		// --- 容器相关 ---
 		protected.POST("/container/launch", handler.LaunchContainer)
 		protected.POST("/container/terminate", handler.TerminateContainer)
+
+		// --- Flag 提交 ---
+		protected.POST("/submit", handler.SubmitFlag)
+
+		// --- 排行榜 ---
+		protected.GET("/rank", handler.GetGlobalRank)
+		protected.GET("/rank/:id", handler.GetCompRank)
+
+		// --- 文件上传 ---
+		protected.POST("/upload", handler.UploadFile)
+
+		// --- 团队相关 ---
+		teamGroup := protected.Group("/team")
+		{
+			teamGroup.POST("/create", handler.CreateTeam)
+			teamGroup.POST("/join", handler.JoinTeam)
+			teamGroup.GET("/my", handler.GetMyTeam)
+		}
 	}
 
-	teamGroup := protected.Group("/team")
+	// ============ 管理员专用接口 ============
+	admin := r.Group("/admin")
+	admin.Use(middleware.JWTAuth())
+	admin.Use(middleware.AdminOnly())
 	{
-    	teamGroup.POST("/create", handler.CreateTeam)
-    	teamGroup.POST("/join", handler.JoinTeam)
-    	teamGroup.GET("/my", handler.GetMyTeam) // 前端一进“我的战队”页面就调这个
-		
+		// --- 题目管理 ---
+		admin.POST("/challenge", handler.CreateChallenge)
+		admin.PUT("/challenge/:id", handler.UpdateChallenge)
+		admin.DELETE("/challenge/:id", handler.DeleteChallenge)
+
+		// --- 比赛管理 ---
+		admin.POST("/competition", handler.CreateCompetition)
+		admin.PUT("/competition/:id", handler.UpdateCompetition)
+		admin.DELETE("/competition/:id", handler.DeleteCompetition)
+
+		// --- 用户管理 ---
+		admin.GET("/users", handler.ListUsers)
+		admin.PUT("/user/:id/role", handler.SetUserRole)
+		admin.DELETE("/user/:id", handler.DeleteUser)
+
+		// --- 比赛统计 ---
+		admin.GET("/statistics/competition/:id", handler.GetCompetitionStatistics)
 	}
 
 	return r
